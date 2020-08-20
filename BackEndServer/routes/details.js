@@ -24,14 +24,12 @@ router.post('/',async(req,res,next)=>{
 
 router.get('/',async(req,res,next)=>{
     try{
-     // MySchema.find().sort({ _id: -1 }).limit(10)
       const op_latest = await Detail.find().sort({_id:1}).limit(1)
       const op_oldest = await Detail.find().sort({_id:-1}).limit(1);
       res.json({
         "first entry":op_oldest[0],
         "last entry" :op_latest[0],
-  
-    });      
+      });      
     }
     catch(err){
         console.log(err);
