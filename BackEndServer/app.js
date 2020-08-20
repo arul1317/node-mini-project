@@ -5,7 +5,7 @@ const bodyParser = require('body-parser');
 //importing route midlleware
 const details = require('./routes/details')
 
-//appsss
+//app
 const app = express();
 
 //middleware
