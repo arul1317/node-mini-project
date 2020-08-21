@@ -10,7 +10,7 @@ router.post('/',async(req,res,next)=>{
         let inp = await req.body;
         for(let i=0;i<inp.length;i++){
             console.log("loop "+i)
-            await Detail.insertMany(inp[i]);
+            await Detail.collection.insertMany(inp[i]);
         }
         console.log("after await");
         res.send("details added");
@@ -24,8 +24,8 @@ router.post('/',async(req,res,next)=>{
 
 router.get('/',async(req,res,next)=>{
     try{
-      const op_latest = await Detail.find().sort({_id:1}).limit(1)
-      const op_oldest = await Detail.find().sort({_id:-1}).limit(1);
+      const op_first = await Detail.find().sort({_id:1}).limit(1)
+      const op_last = await Detail.find().sort({_id:-1}).limit(1);
       res.json({
         "first entry":op_oldest[0],
         "last entry" :op_latest[0],
