@@ -24,11 +24,11 @@ router.post('/',async(req,res,next)=>{
 
 router.get('/',async(req,res,next)=>{
     try{
-      const op_first = await Detail.find().sort({_id:1}).limit(1)
-      const op_last = await Detail.find().sort({_id:-1}).limit(1);
+      const op_first = await Detail.find({},'-_id').sort({_id:1}).limit(1)
+      const op_last = await Detail.find({},'-_id').sort({_id:-1}).limit(1);
       res.json({
-        "first entry":op_oldest[0],
-        "last entry" :op_latest[0],
+        "first entry":op_first[0],
+        "last entry" :op_last[0],
       });      
     }
     catch(err){

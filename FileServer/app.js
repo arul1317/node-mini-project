@@ -89,40 +89,41 @@ const readDir = () =>{
 
 //send get request
 const makeGetRequest =async () =>{
-    try{
-        const options = {
-            host: 'localhost',
-            path:'/api',
-            port:3000,
-            method: 'GET',
-            headers: {
-                'Content-Type': 'application/json',
-            }
-        };
-        const req = http.request(options, (res) => {
+    return new Promise((resolve,reject)=>{
+        try{
+            const options = {
+                host: 'localhost',
+                path:'/api',
+                port:3000,
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            };
+            const req = http.request(options, (res) => {
            
-            let data = '';
+                let data = '';
         
-            console.log('Status Code:', res.statusCode);
+                console.log('Status Code:', res.statusCode);
         
-            res.on('data', (chunk) => {
-                data += chunk;
-               // console.log(JSON.parse(data));
-            });
+                res.on('data', (chunk) => {
+                    data += chunk;
+                });
         
-            res.on('end', () => {
-                console.log('Body: ', JSON.parse(data));
-                return(JSON.parse(data));
-            });
+                res.on('end', () => {
+                    console.log('Body: ', JSON.parse(data));
+                    resolve(JSON.parse(data));
+                });
         
-        }).on("error", (err) => {
-            console.log("Error: ", err.message);
-        });
-        req.end();
-    }
-    catch(err){
-        throw (err)
-    }
+            }).on("error", (err) => {
+                    console.log("Error: ", err.message);
+                });
+            req.end();
+        }
+        catch(err){
+            throw (err)
+        }
+    })
 }
 
 //main function
@@ -131,15 +132,26 @@ const main =async () =>{
         let files = await readDir();
         const allFilesData = files.map(e=> readFileToJson(e));
         let abcd = await Promise.all(allFilesData);
+
+        let inp1 = abcd[0][0]
+        let len1 = abcd.length-1;
+        let len2 = (abcd[len1].length)-1;
+        let inp2 = abcd[len1][len2]
         
         await makeHttpRequest(abcd);
         
         console.log("http req completed");
+        
         files.forEach((file)=>{
             move(file);
         })
 
-        makeGetRequest();
+        let dbresult = await makeGetRequest();
+        
+        //Verifying the contents in db
+        if(JSON.stringify(inp1)==JSON.stringify(dbresult['first entry']) && JSON.stringify(inp2)==JSON.stringify(dbresult['last entry'])){
+            console.log("Successfully added contents to database")
+        }
        
 
     }
