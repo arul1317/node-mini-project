@@ -26,7 +26,7 @@ const db =mongoose.connection
         console.log(err)
       })
                         
-    db.once('open',()=>    // to check that of database is connected or not
+    db.once('open',()=>    // to  that of database is connected or not
       {
             console.log('database conection established');
       })
@@ -36,7 +36,7 @@ const db =mongoose.connection
   app.use(bodyparser.json({limit: "300mb"}));   // for large data file 
    app.use(bodyparser.urlencoded({limit: "300mb", extended: true, parameterLimit:999999}));
    
-  app.put('/store',(res,req)=>
+  app.put('/',(res,req)=>
   {
       ++filecount
        req.write(filecount+"=> data recieved")     //acknowledge that data recieved
@@ -77,7 +77,7 @@ const db =mongoose.connection
               dbo.collection("s_datas").find().limit(1).toArray(function(err, result) // retrieve the first data from database
               {
                 
-                csvfilepath = "F:\\node_final_mini_project\\File_Processing_Server\\file1\\1.dat"
+                csvfilepath = "..\\File_Processing_Server\\file1\\1.dat"
                 csvtojson()
                 .fromFile(csvfilepath)
                   .then((json) => 
@@ -110,7 +110,7 @@ const db =mongoose.connection
               dbo.collection("s_datas").find().sort({_id:-1}).limit(1).toArray(function(err, result)  // retrieve the last data from database
               {
                 
-                csvfilepath = "F:\\node_final_mini_project\\File_Processing_Server\\file1\\5.dat"
+                csvfilepath = "..\\File_Processing_Server\\file1\\5.dat"
                  csvtojson()
                 .fromFile(csvfilepath)
                   .then((json) => 
