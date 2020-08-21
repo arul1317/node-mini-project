@@ -83,7 +83,7 @@ const db =mongoose.connection
               dbo.collection("s_datas").find().limit(1).toArray(function(err, result) // retrieve the first data from database
               {
                 
-                csvfilepath = "F:\\node_final_mini_project\\File_Processing_Server\\file1\\1.dat"
+                csvfilepath = "..\\File_Processing_Server\\file1\\1.dat"
                 csvtojson()
                 .fromFile(csvfilepath)
                   .then((json) => 
@@ -119,7 +119,7 @@ const db =mongoose.connection
               dbo.collection("s_datas").find().sort({_id:-1}).limit(1).toArray(function(err, result)  // retrieve the last data from database
               {
                 
-                csvfilepath = "F:\\node_final_mini_project\\File_Processing_Server\\file1\\5.dat"
+                csvfilepath = "..\\File_Processing_Server\\file1\\5.dat"
                 csvtojson()
                 .fromFile(csvfilepath)
                   .then((json) => 
