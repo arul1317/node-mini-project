@@ -2,6 +2,7 @@ const fs = require('fs-extra');
 const csvtojson = require('csvtojson');
 const path = require("path");
 const http = require("http");
+const { createReadStream } = require('fs-extra');
 
 
 //path of csv file folder
@@ -10,26 +11,12 @@ filename = '';
 Csvdocs = [];
 Dbdocs = [];
 Files = '';
-Size=[];
-firstcsv='';
-lastcsv='';
+Size = [];
+firstcsv = '';
+lastcsv = '';
 //path of archive folder
 ArchiveFilepath = './Archive-files';
 
-
-// Reading csv files from directory: telstra-csv
-fs.readdirAsync = function (dirname) {
-  return new Promise(function (resolve, reject) {
-    fs.readdir(dirname, function (err, filenames) {
-      if (err)
-        reject(err);
-      else
-        resolve(filenames);
-    });
-  });
-};
-
-// ------------Execution----------------
 
 
 // read directory per file
@@ -38,56 +25,54 @@ fs.readdirAsync = function (dirname) {
 // get 1st and last posted doc from db
 // with promise chaining
 
-fs.readdirAsync(Filepath)
-  .then(function (files) {
-    Files = files;
-    return Promise.all(files.map(postContent))
 
-  })
-  .then((postedAll) => {
-    console.log(postedAll);
+var main = async () => {
+
+  fs.readdir(Filepath, async (err, files) => {
+    if (err)
+      throw (err);
+
+    var filesdata = await Promise.all(files.map(postContent));
+    console.log(filesdata);
     console.log(Size);
     firstcsv = Size[0];
     lastcsv = Size[Size.length - 1];
-    return Promise.all(Files.map(movefile))
 
-  })
-  .then((movedToArchive) => {
-    console.log(movedToArchive);
-    return getdocsCsv()
+    var movedfiles = await Promise.all(files.map(movefile));
+    console.log(movedfiles);
 
-  })
-  .then((docsCsv) => {
+    Csvdocs = await getdocsCsv();
     console.log("1st and last docs from csv files");
-    console.log(docsCsv);
-    return getdocdDb()
+    console.log(Csvdocs);
 
-  }).then((docsDb) => {
-    
+    Dbdocs = await getdocdDb();
     console.log("1st and last docs from Db :");
-    console.log(docsDb);
 
     var modify = (Dbjson) => {
+      for (doc in Dbjson) {
+        Object.keys(doc).forEach((key) => {
+          if (key == "_id" || key == "__v") {
+            delete Dbjson[key]
+          }
+        })
+      }
 
-      Object.keys(Dbjson).forEach((key) => {
-        if (key == "_id" || key == "__v") {
-          delete Dbjson[key]
-        }
-      })
 
 
     }
-    modify(Dbdocs[0]);
-    modify(Dbdocs[1])
+    modify(Dbdocs);
+  
+    console.log(Dbdocs);
 
 
-    //check
     if ((JSON.stringify(Csvdocs) == (JSON.stringify(Dbdocs)))) {
+      console.log("hi");
       console.log("successfully posted and verified the contents to Database");
     }
+  });
+}
 
-  }).catch((e) => console.log(e))
-
+main().catch(e => console.log(e))
 
 
 
@@ -96,43 +81,49 @@ var postContent = async (file) => {
   filename = '';
   var jsonArray = await csvtojson().fromStream(fs.createReadStream(path.join(__dirname, `${Filepath}`, `${file}`)));
   return new Promise((resolve, reject) => {
-    
+
     Size.push(`${file}`);
 
     filename = file.split('.')[0];
     filename = (filename == 'product' || filename == 'service') ? ('service') : (filename == 'personaldata') ? ('personaldata') : ('data');;
 
-   
 
-      options = {
-        host: 'localhost',
-        port: 3000,
-        path: `/${filename}`,
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        }
+
+    options = {
+      host: 'localhost',
+      port: 3000,
+      path: `/${filename}`,
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
       }
+    }
 
-      var postreq = http.request(options, (res) => {
+    var postreq = http.request(options, (res) => {
+      var data = '';
+      res.setEncoding('utf8');
+      console.log(`StatusCode: ${res.statusCode}`);
+      console.log(`${file}`);
+      res.on('data', (chunk) => {
+        data += chunk;
 
-        res.setEncoding('utf8');
-        console.log(res.statusCode);
-        console.log(`${file}`);
-        res.on('data', (chunk) => {
-          resolve(`posted content of ${file}`);
-        })
+      })
+      res.on('end', () => {
 
-        res.on('error', (e) => {
-          reject(e);
-        })
+        resolve(`posted content of ${file}`);
 
       })
 
-      postreq.write(JSON.stringify(jsonArray));
-      postreq.on('error', (e) => { reject(e) });
-      postreq.end();
+      res.on('error', (e) => {
+        reject(e);
+      })
+
+    })
+
+    postreq.write(JSON.stringify(jsonArray));
+    postreq.on('error', (e) => { reject(e) });
+    postreq.end();
 
 
   })
@@ -157,9 +148,9 @@ function movefile(file) {
 //getting first and last doc from csv files
 function getdocsCsv() {
   return new Promise((resolve, reject) => {
-    
-    getfromcsv(resolve,reject);
-    
+
+    getfromcsv(resolve, reject);
+
   })
 
 }
@@ -168,33 +159,33 @@ function getdocsCsv() {
 // getting jsons from db
 function getdocdDb() {
   return new Promise((resolve, reject) => {
-   
+
     get_Dbcalls(resolve, reject);
-   
+
   })
 }
 
 
 
 
-var getfromcsv = async (resolve,reject) => {
-  try{
-  var jsonArray = await csvtojson().fromFile(path.join(__dirname, `${ArchiveFilepath}`, `${firstcsv}`));
-  Csvdocs.push(jsonArray[0]);
+var getfromcsv = async (resolve, reject) => {
+  try {
+    var jsonArray = await csvtojson().fromFile(path.join(__dirname, `${ArchiveFilepath}`, `${firstcsv}`));
+    Csvdocs.push(jsonArray[0]);
 
-  jsonArray = await csvtojson().fromFile(path.join(__dirname, `${ArchiveFilepath}`, `${lastcsv}`));
-  Csvdocs.push(jsonArray[jsonArray.length - 1]);
-  resolve(Csvdocs);
+    jsonArray = await csvtojson().fromFile(path.join(__dirname, `${ArchiveFilepath}`, `${lastcsv}`));
+    Csvdocs.push(jsonArray[jsonArray.length - 1]);
+    resolve(Csvdocs);
 
   }
- catch(e){
-   reject(e)
- }
-  
+  catch (e) {
+    reject(e)
+  }
+
 }
 
-var get_Dbcalls = async (resolve,reject) => {
- 
+var get_Dbcalls = async (resolve, reject) => {
+
   firstcsv = firstcsv.split(".")[0];
   lastcsv = lastcsv.split(".")[0];
 
@@ -217,10 +208,10 @@ var get_Dbcalls = async (resolve,reject) => {
     console.log(res.statusCode);
     res.setEncoding('utf8');
     res.on('data', (chunk) => {
-     
+
       Dbdocs.splice(0, 0, JSON.parse(chunk))
     })
-    res.on('error',(e)=>{
+    res.on('error', (e) => {
       reject(e);
     })
   }).end();
@@ -240,13 +231,13 @@ var get_Dbcalls = async (resolve,reject) => {
     console.log(res.statusCode);
     res.setEncoding('utf8')
     res.on('data', (chunk) => {
-     
+
       Dbdocs.splice(1, 0, JSON.parse(chunk)[0])
 
       resolve(Dbdocs);
     })
 
-    res.on('error',(e)=>{
+    res.on('error', (e) => {
       reject(e);
     })
   }).end();

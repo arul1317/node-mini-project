@@ -8,9 +8,12 @@ router.post(
   async (req, res, next) => {
     try {
       console.log("data get");
-      Data.insertMany(req.body);
-      console.log("res sent from data");
-      res.status(201).json({ message: "done" });
+      Data.insertMany(req.body, (err, resp) => {
+        if (err) throw err;
+        console.log("res sent from data");
+        res.status(201).json(resp);
+      });
+
 
     } catch (e) {
       next(e);
@@ -23,11 +26,18 @@ router.get(
     try {
       console.log("data || Rxd req for 1st doc");
 
-      const dat = await Data.findOne();
-      console.log(dat);
-      res.status(200).json(dat);
-      console.log("1st doc sent");
+      await Data.findOne({})
+        .exec((err, data) => {
+          if (err || !data) {
+            throw err
 
+          } else {
+            console.log(data);
+            res.status(200).json(data);
+            console.log("1st doc sent");
+          }
+
+        });
     } catch (e) {
       next(e);
     }
@@ -38,10 +48,13 @@ router.get(
   '/getlastdoc', async (req, res, next) => {
     try {
       console.log("data || Rxd req for last doc");
-      const dat = await Data.find({}).sort({ _id: -1 }).limit(1);
-      console.log(dat);
-      res.status(200).json(dat);
-      console.log("last doc sent");
+      await Data.find({}).sort({ _id: -1 }).limit(1)
+        .exec((err, data) => {
+          if (err||!data){throw err;} 
+          console.log(data);
+          res.status(200).json(data);
+          console.log("last doc sent");
+        })
 
     } catch (e) {
       next(e);

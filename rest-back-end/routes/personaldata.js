@@ -9,13 +9,15 @@ router.post(
   '/',
   async (req, res, next) => {
     try {
-      console.log("personalData get");
-      await PData.insertMany(req.body);
-      console.log("res sent from data");
-      res.status(201).json({ message: "done" });
+      console.log("PData get");
+      PData.insertMany(req.body, (err, resp) => {
+        if (err) throw err;
+        console.log("res sent from PData");
+        res.status(201).json(resp);
+      });
+
 
     } catch (e) {
-
       next(e);
     }
   }
@@ -24,12 +26,20 @@ router.post(
 router.get(
   '/getfirstdoc', async (req, res, next) => {
     try {
-      console.log("Pdata || Rxd req for 1st doc");
-      const dat = await PData.findOne();
-      console.log(dat);
-      res.status(200).json(dat);
-      console.log("1st doc sent");
+      console.log("PData || Rxd req for 1st doc");
 
+      await PData.findOne({})
+        .exec((err, data) => {
+          if (err || !data) {
+            throw err
+
+          } else {
+            console.log(data);
+            res.status(200).json(data);
+            console.log("1st doc sent");
+          }
+
+        });
     } catch (e) {
       next(e);
     }
@@ -39,11 +49,14 @@ router.get(
 router.get(
   '/getlastdoc', async (req, res, next) => {
     try {
-      console.log("Pdata || Rxd req for last doc");
-      const dat = await PData.find({}).sort({ _id: -1 }).limit(1);
-      console.log(dat);
-      res.status(200).json(dat);
-      console.log("last doc sent");
+      console.log("PData || Rxd req for last doc");
+      await PData.find({}).sort({ _id: -1 }).limit(1)
+        .exec((err, data) => {
+          if (err||!data){throw err;} 
+          console.log(data);
+          res.status(200).json(data);
+          console.log("last doc sent");
+        })
 
     } catch (e) {
       next(e);
