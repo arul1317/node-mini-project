@@ -30,20 +30,13 @@ router.post(
 					await bulk.execute();
 				stream.close();
 				fs.unlinkSync(jsonfile);
-				await User.find().sort({_id:1}).limit(1).exec( function(err, record) {
-					if(err)
-						console.log(err);
-					console.log('First USER record in database:');
-					console.log(record);
-				})
-				User.find().sort({_id:-1}).limit(1).exec( function(err, record) {
-					if(err)
-						console.log(err);
-					console.log('Last USER record in database:');
-					console.log(record);
-				})
-			});	
-			response.write('USER records inserted.');	
+				var first = await User.find().sort({_id:1}).limit(1);
+				var last = await User.find().sort({_id:-1}).limit(1);
+				response.json({
+					"First record":first,
+					"Last record":last
+				}); 
+			});
 		} catch(e) {
 			throw e;
 		}		

@@ -50,20 +50,13 @@ router.post(
 				if(counter>0)
 					await bulk.execute();
 				stream.close();
-				fs.unlink(jsonfile, function(err){ if(err) console.log(err) });
-				await Model.find().sort({_id:1}).limit(1).exec( function(err, record) {
-					if(err)
-						console.log(err);
-					console.log(`First ${key} record in database:`);
-					console.log(record);
-				});
-				Model.find().sort({_id:-1}).limit(1).exec( function(err, record) {
-					if(err)
-						console.log(err);
-					console.log(`Last ${key} record in database:`);
-					console.log(record);
-				});
-				response.send(`${key} records inserted.`);
+				fs.unlinkSync(jsonfile);
+				var first = await Model.find().sort({_id:1}).limit(1);
+				var last = await Model.find().sort({_id:-1}).limit(1);
+				response.send({
+					"First record":first,
+					"Last record":last
+				}); 
 			});			
 		} catch(e) {
 			throw e;

@@ -7,6 +7,7 @@ const Promise = require('promise');
 module.exports.preprocess=(csvfile)=>{
 	return new Promise(resolve => {
 	try {
+		const jsonfile = './sampledata/temp.json';
 		const toObject = csvjson.stream.toObject();
 		const stringify = csvjson.stream.stringify();
 		if(csvfile.includes('USER')) {
@@ -22,10 +23,10 @@ module.exports.preprocess=(csvfile)=>{
 		stream1
 		.pipe(toObject)
 		.pipe(stringify)
-		.pipe(fs.createWriteStream('./sampledata/temp.json'));
+		.pipe(fs.createWriteStream(jsonfile));
 		var lastfilesize = 0;
 		const writeInterval = setInterval(()=>{
-			var currentfilesize = fs.statSync('./sampledata/temp.json').size;
+			var currentfilesize = fs.statSync(jsonfile).size;
 			var sizechange = currentfilesize - lastfilesize;			
 			if(sizechange==0) {
 				clearInterval(writeInterval);	

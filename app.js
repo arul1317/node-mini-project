@@ -5,7 +5,7 @@ const cdrRoutes = require('./routes/cdrRoutes');
 const userRoutes = require('./routes/userRoutes');
 
 app.use(function(req, res, next){
-    req.setTimeout(20*60*1000);
+    req.setTimeout(30*60*1000);
     next();
 });		
 
