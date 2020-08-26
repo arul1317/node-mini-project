@@ -14,7 +14,8 @@
     "event-stream": "^4.0.1",
     "express": "^4.17.1",
     "mongodb": "^3.6.0",
-    "mongodb-memory-server": "^6.6.3",
-    "mongoose": "^5.9.29"
+    "mongoose": "^5.9.29",
+    "promise": "^8.1.0",
+    "request": "^2.88.2"
   }
 }

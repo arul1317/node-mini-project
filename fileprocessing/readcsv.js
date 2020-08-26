@@ -1,133 +1,55 @@
 
 const fs = require('fs');
 const csvjson = require('csvjson');
-const toObject = csvjson.stream.toObject();
-const stringify = csvjson.stream.stringify();
+const request = require('request');
+const Promise = require('promise'); 
 
-module.exports.readuser=() => {
+module.exports.preprocess=(csvfile)=>{
+	return new Promise(resolve => {
 	try {
-		console.log('File processing server converting from csv to json.');
-		var csvfile = 'USER_SAMPLES.csv';
-		fs.createReadStream('./sampledata/'+csvfile, 'utf-8')
+		const toObject = csvjson.stream.toObject();
+		const stringify = csvjson.stream.stringify();
+		if(csvfile.includes('USER')) {
+			var key = 'user';
+			var urlstring = `http://localhost:3000/${key}/`;
+		} else {
+			const myre = /^CDR_BLACKHAWK_([A-Z]+)_[0-9_]+\.csv$/;
+			var key = myre.exec(csvfile)[1];
+			var urlstring = `http://localhost:3000/cdr/${key}/`;
+		}
+		console.log(`File processing server converting ${key} records from csv to json.`);
+		var stream1= fs.createReadStream('./sampledata/'+csvfile, 'utf-8');
+		stream1
 		.pipe(toObject)
 		.pipe(stringify)
-		.pipe(fs.createWriteStream('./sampledata/USER_SAMPLES.json'));
-		fs.rename('./sampledata/'+csvfile, './archiveFolder/'+csvfile, function(err) {
-			if (err) {
-				console.log(err);
+		.pipe(fs.createWriteStream('./sampledata/temp.json'));
+		var lastfilesize = 0;
+		const writeInterval = setInterval(()=>{
+			var currentfilesize = fs.statSync('./sampledata/temp.json').size;
+			var sizechange = currentfilesize - lastfilesize;			
+			if(sizechange==0) {
+				clearInterval(writeInterval);	
+				stream1.close();
+				fs.rename('./sampledata/'+csvfile, './archiveFolder/'+csvfile, function(err) {
+					if (err) {
+						console.log(err);
+					} else {
+						console.log(`${key} csv file archived.`);
+					}
+				});
+				request.post({url: urlstring}, function(error, response, body){
+					if (error) {
+						console.log(error);
+					} else{
+						resolve(response.body);
+					}
+				});
 			}
-			else {
-				console.log('User csv file archived.');
-			}
-		});		
-	} catch(err) {
-		next(err);
-	}
-};
-
-module.exports.readvoice=() => {
-	try {
-		console.log('File processing server converting from csv to json.');
-		var csvfile = 'CDR_BLACKHAWK_VOICE_20200617_084000.csv';
-		fs.createReadStream('./sampledata/'+csvfile, 'utf-8')
-		.pipe(toObject)
-		.pipe(stringify)
-		.pipe(fs.createWriteStream('./sampledata/CDR_BLACKHAWK_VOICE_20200617_084000.json'));
-		fs.rename('./sampledata/'+csvfile, './archiveFolder/'+csvfile, function(err) {
-			if (err) {
-				console.log(err);
-			}
-			else {
-				console.log('Voice csv file archived.');
-			}
-		});
-	} catch(err) {
-		next(err);
-	}
-};
-
-module.exports.readdata=() => {
-	try {
-		console.log('File processing server converting from csv to json.');
-		var csvfile = 'CDR_BLACKHAWK_DATA_20200617_084351.csv';
-		fs.createReadStream('./sampledata/'+csvfile, 'utf-8')
-		.pipe(toObject)
-		.pipe(stringify)
-		.pipe(fs.createWriteStream('./sampledata/CDR_BLACKHAWK_DATA_20200617_084351.json'));
-		fs.rename('./sampledata/'+csvfile, './archiveFolder/'+csvfile, function(err) {
-			if (err) {
-				console.log(err);
-			}
-			else {
-				console.log('Data csv file archived.');
-			}
-		});		
-	} catch(err) {
-		next(err);
-	}
-};
-
-module.exports.readsio=() => {
-	try {
-		console.log('File processing server converting from csv to json.');
-		var csvfile = 'CDR_BLACKHAWK_SIO_20200618_060000.csv';
-		fs.createReadStream('./sampledata/'+csvfile, 'utf-8')
-		.pipe(toObject)
-		.pipe(stringify)
-		.pipe(fs.createWriteStream('./sampledata/CDR_BLACKHAWK_SIO_20200618_060000.json'));
-		fs.rename('./sampledata/'+csvfile, './archiveFolder/'+csvfile, function(err) {
-			if (err) {
-				console.log(err);
-			}
-			else {
-				console.log('Sio csv file archived.');
-			}
-		});		
-	} catch(err) {
-		next(err);
-	}
-};
-
-module.exports.readservice=() => {
-	try {
-		console.log('File processing server converting from csv to json.');
-		var csvfile = 'CDR_BLACKHAWK_SERVICE_20200617_073703.csv';
-		fs.createReadStream('./sampledata/'+csvfile, 'utf-8')
-		.pipe(toObject)
-		.pipe(stringify)
-		.pipe(fs.createWriteStream('./sampledata/CDR_BLACKHAWK_SERVICE_20200617_073703.json'));
-		fs.rename('./sampledata/'+csvfile, './archiveFolder/'+csvfile, function(err) {
-			if (err) {
-				console.log(err);
-			}
-			else {
-				console.log('Service csv file archived.');
-			}
-		});		
-	} catch(err) {
-		next(err);
-	}
-};
-
-module.exports.readproduct=() => {
-	try {
-		console.log('File processing server converting from csv to json.');
-		var csvfile = 'CDR_BLACKHAWK_PRODUCT_20200617_073703.csv';
-		fs.createReadStream('./sampledata/'+csvfile, 'utf-8')
-		.pipe(toObject)
-		.pipe(stringify)
-		.pipe(fs.createWriteStream('./sampledata/CDR_BLACKHAWK_PRODUCT_20200617_073703.json'));
-		fs.rename('./sampledata/'+csvfile, './archiveFolder/'+csvfile, function(err) {
-			if (err) {
-				console.log(err);
-			}
-			else {
-				console.log('Product csv file archived.');
-			}
-		});		
+			lastfilesize = currentfilesize;
+		}, 500);
 	} catch(err) {
 		throw err;
 	}
+	});
 };
-
 
