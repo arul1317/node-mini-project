@@ -1,0 +1,21 @@
+{
+  "name": "miniprojectex1",
+  "version": "1.0.0",
+  "description": "TELSTRA mini project",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Anwesha Ghosh",
+  "license": "ISC",
+  "dependencies": {
+    "JSONStream": "^1.3.5",
+    "csvjson": "^5.1.0",
+    "event-stream": "^4.0.1",
+    "express": "^4.17.1",
+    "mongodb": "^3.6.0",
+    "mongoose": "^5.9.29",
+    "promise": "^8.1.0",
+    "request": "^2.88.2"
+  }
+}
